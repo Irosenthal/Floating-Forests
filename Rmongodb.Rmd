@@ -1,0 +1,139 @@
+# start mongod instance in adimin command prompt
+
+library(rmongodb) # load libraries
+library(plyr)
+library(dplyr)
+
+
+mongo <- mongo.create(host = 'localhost') # connect to mongod
+
+mongo.is.connected(mongo) # check connection
+
+mongo.get.databases(mongo) # check contents of db
+mongo.get.database.collections(mongo, 'FF')
+
+mongo.count(mongo, "FF.kelp_classifications")
+mongo.find.one(mongo, "FF.kelp_subjects") # display first entry
+
+
+if(mongo.is.connected(mongo) == TRUE) {
+  help("mongo.count")
+  mongo.count(mongo, 'zipspractice.zips')
+}
+
+
+mongo.find.one(mongo, 'zipspractice.zips') # shows one document
+
+mongo.distinct(mongo, 'zipspractice.zips', 'city') # lists all values for a key
+id <- mongo.distinct(mongo, 'FF.kelp_classifications', 'subject_ids')
+
+# practice: ask for one document with zip code data for COLORADO CITY
+
+# scroll through scenes
+# for each scene grab images
+# use metadat for scene to get correct utm lat long
+# zone and corners (uppert left lower right) for each image
+# pull each scene
+# put together a grid with the points
+
+# write a CSV generator for collaborators
+# can we build new columns
+#  from test scene jarrett will provide - get correct coords for an image
+# fix coordinates
+# 4a fix ruby
+city <- mongo.find.all(mongo, 'zipspractice.zips', '{"city":"COLORADO CITY"}')
+
+mongo.distinct(mongo, 'zipspractice.zips', 'pop')  # more practice, looking for all values of population
+
+mongo.count(mongo, 'zipspractice.zips', list('pop' = list('$lte' = 2)))
+
+idprac <- mongo.find.all(mongo, 'restoretest.kelp_classifications', '{"subject_ids":"7"}', limit = 10)
+
+53e2f7ad4954734d8b152a00
+
+
+pops <- mongo.find.all(mongo, 'zipspractice.zips', list('pop' = list('$lte' = 2)))
+
+head(pops, 2)
+
+    ##### convert .bson to a data.frame (just to see data structure, etc) #####
+
+# start with a small one
+
+groups = data.frame(StringAsFactors = FALSE)
+DBNS = "restoretest.kelp_groups"
+
+cursor3 = mongo.find(mongo, DBNS)
+
+i = 1
+
+while (mongo.cursor.next(cursor3)) {
+tmp3 = mongo.bson.to.list(mongo.cursor.value(cursor3))
+tmp.df = as.data.frame(t(unlist(tmp3)), stringAsFactors = F)
+groups = rbind.fill(groups, tmp.df)
+}
+
+str('groups')
+head(groups)
+
+#  now for classifications
+
+classifications = data.frame(StringAsFactors = FALSE)
+DBNS = "restoretest.kelp_classifications"
+
+cursor3 = mongo.find(mongo, DBNS)
+
+i = 1
+
+while (mongo.cursor.next(cursor3)) {
+tmp3 = mongo.bson.to.list(mongo.cursor.value(cursor3))
+tmp.df = as.data.frame(t(unlist(tmp3)), stringAsFactors = F)
+classifications = rbind.fill(classifications, tmp.df)
+}
+
+str('classifications')
+head(classifications)
+
+# now for subjects
+
+subjects = data.frame(StringAsFactors = FALSE)
+DBNS = "FF.kelp_subjects"
+
+cursor3 = mongo.find(mongo, DBNS)
+
+i = 1
+
+while (mongo.cursor.next(cursor3)) {
+tmp3 = mongo.bson.to.list(mongo.cursor.value(cursor3))
+tmp.df = as.data.frame(t(unlist(tmp3)), stringAsFactors = F)
+subjects = rbind.fill(subjects, tmp.df)
+}
+
+str(subjects)
+head(subjects)
+
+save(subjects, file = "kelp_subjects.Rda")
+write.csv(subjects, file = "kelp_subjects.csv")
+load("kelp_subjects.Rda")
+
+# select ID and coords
+subjectselect <- select(subjects, zooniverse_id, coords1, coords2)
+
+# function to convert wgs84 to utm
+
+LongLatToUTM<-function(x,y,zone){
+  xy <- data.frame(ID = 1:length(x), X = x, Y = y)
+  coordinates(xy) <- c("X", "Y")
+  proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")  ## for example
+  res <- spTransform(xy, CRS(paste("+proj=utm +zone=",zone," ellps=WGS84",sep='')))
+  return(as.data.frame(res))
+}
+
+
+test <- mongo.find.all(mongo, 'FF.kelp_subjects', '{"zooniverse_id" :"AKP00016e6"}')
+read.csv('landsat_scenes_filtered_metadata.csv')[825, c(1,4, 9, 10, 11)]
+LE70440351999204EDC01
+
+date <- mongo.find.all(mongo, 'FF.kelp_subjects', '{"metadata.file" :"LE70440351999204EDC01.tar.gz"}')
+
+timestamp <- filter (.data = subjects, LE70440351999204EDC01.tar.gz)

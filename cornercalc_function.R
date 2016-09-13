@@ -30,9 +30,9 @@ col <- scenelookup[arow,'FFcol']
   difflatE <- difflat/483 # utm degrees per pixel
   latresize <- seq(latgridindex[row+1, 1], latgridindex[row, 1], by = difflatE)
   
-  difflon <- longridindex[col +1, 1] - longridindex[col, 1]
+  difflon <- longridindex[col+1, 1] - longridindex[col, 1]
   difflonE <- difflon/531
-  lonresize <- seq(longridindex[col, 1], longridindex[col + 1, 1], by = difflonE)
+  lonresize <- seq(longridindex[col, 1], longridindex[col+1, 1], by = difflonE)
 
   #pull out important points 
   upper_left_x_utm <- min(lonresize)
@@ -60,10 +60,14 @@ col <- scenelookup[arow,'FFcol']
 #####
 #structure data for conversion from utm to lon lat
 
-center_lon <- FFcorners_utm_function$center_x_utm
-center_lat <- FFcorners_utm_function$center_y_utm
+center_lon <- scene_with_FF_UTM$center_x_utm
+center_lat <- scene_with_FF_UTM$center_y_utm
+center_lon <- unlist(center_lon)
+center_lat <- unlist(center_lat)
+
 
 imageutm <- data.frame(center_lon, center_lat)
+
 
 library(rgdal)
 
@@ -105,54 +109,12 @@ scene_with_FF_UTM <- cbind(scene_with_FF_UTM, sceneslice_coords_clean)
 
 scene_with_FF_UTM <- unite(scene_with_FF_UTM, FFrow_col, FFrow, FFcol, sep = ",", remove = FALSE)
 
+#add lon/lats
+
+scene_with_FF_UTM <- cbind(scene_with_FF_UTM, centerlonlatcoor)
 
 
 
 
 
 
-
-######failures#####
-scene_wit
-
-scene_with_FF_UTM %>%
-  dplyr::mutate(scene_with_FF_UTM, upper_left_x_utm = ULXcornercalc(Srow = scene_with_FF_UTM$metadata.row_no, Scol = scene_with_FF_UTM$metadata.col_no),
-         upper_left_y_utm = ULYcornercalc(Srow = scene_with_FF_UTM$metadata.row_no, Scol = scene_with_FF_UTM$metadata.col_no),
-         lower_left_x_utm = LLXcornercalc(Srow = scene_with_FF_UTM$metadata.row_no, Scol = scene_with_FF_UTM$metadata.col_no),
-         lower_left_y_utm = LLYcornercalc(Srow = scene_with_FF_UTM$metadata.row_no, Scol = scene_with_FF_UTM$metadata.col_no),
-         upper_right_x_utm = URXcornercalc(Srow = scene_with_FF_UTM$metadata.row_no, Scol = scene_with_FF_UTM$metadata.col_no),
-         upper_right_y_utm = URYcornercalc(Srow = scene_with_FF_UTM$metadata.row_no, Scol = scene_with_FF_UTM$metadata.col_no),         
-         lower_right_x_utm = LRXcornercalc(Srow = scene_with_FF_UTM$metadata.row_no, Scol = scene_with_FF_UTM$metadata.col_no),
-         lower_right_y_utm = LRYcornercalc(Srow = scene_with_FF_UTM$metadata.row_no, Scol = scene_with_FF_UTM$metadata.col_no),
-         center_x_utm = CXcornercalc(Srow = scene_with_FF_UTM$metadata.row_no, Scol = scene_with_FF_UTM$metadata.col_no),
-         center_y_utm = CYcornercalc(Srow = scene_with_FF_UTM$metadata.row_no, Scol = scene_with_FF_UTM$metadata.col_no))
-
-
-
-
-
-
-
-
-#loop to calculate correct corners and add them to scene table
-
-
-for (i in 1:nrow(scenelookup)){
-  cornercalc(Srow = scenelookup$metadata.row_no[i], Scol = scenelookup$metadata.col_no[i])
-  scene_with_FF_UTM$upper_left_x_utm[i] <- FFcorners_utm_function$upper_left_x_utm[i]
-  scene_with_FF_UTM$upper_left_y_utm[i] <- FFcorners_utm_function$upper_left_y_utm[i]
-  scene_with_FF_UTM$ower_left_x_utm[i] <- FFcorners_utm_function$lower_left_x_utm[i]
-  scene_with_FF_UTM$lower_left_y_utm[i] <- FFcorners_utm_function$lower_left_y_utm[i]
-  scene_with_FF_UTM$upper_right_x_utm[i] <- FFcorners_utm_function$upper_right_x_utm[i]
-  scene_with_FF_UTM$upper_right_y_utm[i] <- FFcorners_utm_function$upper_right_y_utm[i]
-  scene_with_FF_UTM$ lower_right_x_utm[i] <-FFcorners_utm_function$lower_right_x_utm[i]
-  scene_with_FF_UTM$lower_right_y_utm[i] <- FFcorners_utm_function$lower_right_y_utm[i]
-  scene_with_FF_UTM$center_x_utm[i] <- FFcorners_utm_function$center_x_utm[i]
-  scene_with_FF_UTM$center_y_utm[i] <- FFcorners_utm_function$center_y_utm[i]
-  scene_with_FF_UTM$center_lon[i] <- centerlonlatcoor$longitude[i]
-  scene_with_FF_UTM$center_lat[i] <- centerlonlatcoor$latitude[i]
-  }
-
-
-
-#####

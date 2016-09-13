@@ -109,7 +109,7 @@ FFcorners_utm <- data.frame(upper_left_x_utm, upper_left_y_utm,
 
 lons <- c(upper_left_x_utm, upper_right_x_utm, lower_left_x_utm, lower_right_x_utm)
 lats <- c(upper_left_y_utm, upper_right_y_utm, lower_left_y_utm, lower_right_y_utm)
-images <- data.f
+
 
 imageutmlist <- (select(scene_with_FF_UTM, center_x_utm, center_y_utm))
 asnumbersx <- as.numeric(imageutmlist[[1]])
@@ -166,7 +166,8 @@ scene_map <- qmap(big_sur, zoom = 7)
 scene <- scene_map + 
   geom_label(data = scene_with_FF_UTM, aes(x = longitude, 
                                           y = latitude,
-                                          label = FFrow_col))
+                                          label = FFrow_col)) +
+  geom_point(data = scenelatlon, aes(x = x, y = y))
 
 scene
 

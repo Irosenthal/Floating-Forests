@@ -44,13 +44,13 @@ submetaraw <- left_join(subjects_clean, meta, by  = "sceneID")
 
 #row and cols start from 0, need to add 1 to each
 submeta <- submetaraw %>%
-  mutate(FFrow = metadata.row_no +2) %>%
-  mutate(FFcol = metadata.col_no +2)
+  mutate(FFrow = metadata.row_no +1) %>%
+  mutate(FFcol = metadata.col_no +1)
 
 
 # now choose 1 scene and add correct grid coords. start with image AKP00016e6 because we have used it before
 
-imagelookup <- filter(scene_with_FF_UTM, as.character(zooniverse_id) == "AKP00016e6")
+imagelookup <- filter(submeta, as.character(zooniverse_id) == "AKP00016e6")
 scenelookup <- filter(submeta, sceneID == "LE70440351999204EDC01")
 rowlookup <- filter(scenelookup, as.character(metadata.row_no) == "2")
 

@@ -15,7 +15,7 @@ lonlatpix <-expand.grid(x = seq(min(sceneUTM$X), max(sceneUTM$X), by = 30), y = 
 
 
 
-#this assigns each to a unique  pixel to each set of um coords within the scene
+#this assigns each to a unique  pixel to each set of utm coords within the scene
 lonlatpixIndex <- mutate(lonlatpix, PID = 1:nrow(lonlatpix))
 
 
@@ -164,9 +164,9 @@ big_sur <- 'big_sur'
 scene_map <- qmap(big_sur, zoom = 7)
 
 scene <- scene_map + 
-  geom_label(data = scene_with_FF_UTM, aes(x = longitude, 
+  geom_text(data = scene_with_FF_UTM, aes(x = longitude, 
                                           y = latitude,
-                                          label = FFrow_col)) +
+                                          ) +
   geom_point(data = scenelatlon, aes(x = x, y = y))
 
 scene

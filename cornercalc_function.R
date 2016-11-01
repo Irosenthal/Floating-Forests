@@ -1,4 +1,6 @@
 
+library(rgdal)
+
 
 #grab all row/cols from the scene
 
@@ -18,10 +20,9 @@ scenelookup <- filter(submeta, sceneID == "LE70440351999204EDC01")
 
 cornercalc(1)
 
-
 cornercalc <- function(arow){
-row <- scenelookup[arow,'FFrow']
-col <- scenelookup[arow,'FFcol']
+row <- unlist(scenelookup[arow,'FFrow'])
+col <- unlist(scenelookup[arow,'FFcol'])
   
   #indexing reminder: UTM coords are in first column of dataframe
   #latresize and lonresize give the UTM for each pixel in the FF image. 
@@ -46,12 +47,13 @@ col <- scenelookup[arow,'FFcol']
   center_x_utm <- (upper_left_x_utm + ((upper_right_x_utm - upper_left_x_utm)/2))
   center_y_utm <- (lower_left_y_utm + ((upper_left_y_utm - lower_left_y_utm)/2))
   
-  FFcorners_utm_function <<- data.frame(upper_left_x_utm, upper_left_y_utm, 
+  FFcorners_utm_function <- data.frame(upper_left_x_utm, upper_left_y_utm, 
                               lower_left_x_utm, lower_left_y_utm, 
                               upper_right_x_utm, upper_right_y_utm, 
                               lower_right_x_utm, lower_right_y_utm,
                               center_x_utm, center_y_utm)
-  }
+}
+
 
 
 
@@ -68,8 +70,6 @@ center_lat <- unlist(center_lat)
 
 imageutm <- data.frame(center_lon, center_lat)
 
-
-library(rgdal)
 
 # prepare UTM coordinates matrix
 utmcoor<-SpatialPoints(cbind(imageutm$center_lon,imageutm$center_lat), proj4string=CRS("+proj=utm +zone=10"))
@@ -112,6 +112,15 @@ scene_with_FF_UTM <- unite(scene_with_FF_UTM, FFrow_col, FFrow, FFcol, sep = ","
 #add lon/lats
 
 scene_with_FF_UTM <- cbind(scene_with_FF_UTM, centerlonlatcoor)
+
+
+
+
+scene_with_FF_UTM<-sapply(scene_with_FF_UTM,unlist)
+scene_with_FF_UTM <- as.data.frame(scene_with_FF_UTM)
+
+
+write_csv(scene_with_FF_UTM, path = "scene_with_FF_UTM.csv")
 
 
 

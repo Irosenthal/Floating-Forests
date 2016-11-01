@@ -4,10 +4,10 @@ library(readr)
 setwd("C:/Users/irose/OneDrive/FF/Floating-Forests")
 
 #load metadata file
-meta <- read.csv("landsat_scenes_filtered_metadata_with_UTM.csv")
+meta <- read_csv("landsat_scenes_filtered_metadata_with_UTM.csv")
 
 #load subjects table 
-mongosubs <- read.csv("mongosubjectsfix.csv")
+mongosubs <- read_csv("mongosubjectsfix.csv")
 
 #create column in subjects table to clean up sceneID
 
@@ -45,8 +45,8 @@ submetaraw <- left_join(subjects_clean, meta, by  = "sceneID")
 
 #row and cols start from 0, need to add 1 to each
 submeta <- submetaraw %>%
-  mutate(FFrow = metadata.row_no +1) %>%
-  mutate(FFcol = metadata.col_no +1)
+  mutate(FFrow = as.numeric(metadata.row_no) +1) %>%
+  mutate(FFcol = as.numeric(metadata.col_no) +1)
 
 
 # now choose 1 scene and add correct grid coords. start with image AKP00016e6 because we have used it before
@@ -62,6 +62,10 @@ rowlookup <- filter(scenelookup, as.character(metadata.row_no) == "2")
 scenetestrough <- filter(submeta, as.character(sceneID) == "LE70440351999204EDC01")
 
 #####testing with a tas site LT50900901994088ASA00
+
+
+
+#######################now do corner calcs##########################
 
 #scenetestrough <- filter(submeta, as.character(sceneID) == "LT50900901994088ASA00")
 

@@ -73,7 +73,7 @@ latgridindex <- rbind(latgridindex,latbind)
 
 #enter row and col of desired image   (row 8 col 15 for test image) 
 row <- 8
-col <- 15
+col <- 16
 
 
 #indexing reminder: UTM coords are in first column of dataframe
@@ -111,7 +111,9 @@ lons <- c(upper_left_x_utm, upper_right_x_utm, lower_left_x_utm, lower_right_x_u
 lats <- c(upper_left_y_utm, upper_right_y_utm, lower_left_y_utm, lower_right_y_utm)
 
 
-imageutmlist <- (select(scene_with_FF_UTM, center_x_utm, center_y_utm))
+imageutmlist <- dplyr::select(FFcorners_utm, center_x_utm, center_y_utm)
+
+imageutmlist <- data.frame(lons, lats)
 asnumbersx <- as.numeric(imageutmlist[[1]])
 asnumbersy <- as.numeric(imageutmlist[[2]])
 
@@ -121,6 +123,7 @@ library(rgdal)
 
 # prepare UTM coordinates matrix
 utmcoor<-SpatialPoints(cbind(imagesutm$asnumbersx,imagesutm$asnumbersy), proj4string=CRS("+proj=utm +zone=10"))
+
 #utmdata$X and utmdata$Y are corresponding to UTM Easting and Northing, respectively.
 #zone= UTM zone
 
@@ -155,7 +158,7 @@ scene_with_FF_UTM <- cbind(scene_with_FF_UTM, lonlatcoor)
 
 
 library(ggmap)
-install.packages("ggplot2")
+install.packages("ggmap")
 
 #using this as a landmark, revisit once I have actual
 #source of scene metadata
@@ -164,12 +167,15 @@ big_sur <- 'big_sur'
 scene_map <- qmap(big_sur, zoom = 7)
 
 scene <- scene_map + 
-  geom_text(data = scene_with_FF_UTM, aes(x = longitude, 
-                                          y = latitude,
-                                          ) +
-  geom_point(data = scenelatlon, aes(x = x, y = y))
+  Notiosorex crawfordgeom_point(data = corrected_tiles_tidy, aes(x = upper_right_x, 
+                                          y = upper_right_y)) +
+  geom_point(data = scenelatlon, aes(x = x, y = y)) +
+  geom_point(data = caKelp, aes(x = x, y = y), color = "red")
+
 
 scene
 
+
+caKelp <- data.frame( x = c(-121.8992, -120.8681),y = c(35.21637, 36.30411) )
 
 

@@ -10,10 +10,14 @@ library(rgdal)
 #of order
 
 
-
+data() <- read_csv("scene_with_FF_UTM_correct_row_cols.csv")
 #finds the scene
 scenelookup <- filter(submeta, sceneID == "LE70440351999204EDC01")
+image_lookup <- filter(scene_with_FF_UTM, zooniverse_id == "AKP00016e6")
 
+
+#use corrected tiles, genarated from tilerotation.r
+scenelookup <- scene_with_FF_UTM
 
 #function derived from corner_coords.R, but still needs several steps from that
 #file to function. input is row and col number of desired image
@@ -21,8 +25,8 @@ scenelookup <- filter(submeta, sceneID == "LE70440351999204EDC01")
 cornercalc(1)
 
 cornercalc <- function(arow){
-row <- unlist(scenelookup[arow,'FFrow'])
-col <- unlist(scenelookup[arow,'FFcol'])
+row <- unlist(scenelookup[arow,'true_row'])
+col <- unlist(scenelookup[arow,'true_col'])
   
   #indexing reminder: UTM coords are in first column of dataframe
   #latresize and lonresize give the UTM for each pixel in the FF image. 
@@ -62,26 +66,53 @@ col <- unlist(scenelookup[arow,'FFcol'])
 #####
 #structure data for conversion from utm to lon lat
 
-center_lon <- scene_with_FF_UTM$center_x_utm
-center_lat <- scene_with_FF_UTM$center_y_utm
-center_lon <- unlist(center_lon)
-center_lat <- unlist(center_lat)
+center_lon <- scene_with_FF_UTM$center_x_utm %>%
+  unlist(center_lon)
+center_lat <- scene_with_FF_UTM$center_y_utm %>%
+ unlist(center_lat)
 
 
-imageutm <- data.frame(center_lon, center_lat)
+lower_left_lat <- scene_with_FF_UTM$lower_left_x_utm 
+  unlist(lower_left_lat)
+lower_left_lon <- scene_with_FF_UTM$lower_left_y_utm 
+  unlist(lower_left_lon)
+  
+  
+  
+  
+upper_right_lat <- scene_with_FF_UTM$upper_right_x_utm 
+  unlist(upper_right_lat)
+upper_right_lon<- scene_with_FF_UTM$upper_right_y_utm 
+  unlist(upper_right_lon)
+
+
+
+URutm <- data.frame(upper_right_lat = upper_right_lat, upper_right_lon =upper_right_lon)
+
+LLutm <- data.frame(lower_left_lat = lower_left_lat, lower_left_lon =lower_left_lon)
+
 
 
 # prepare UTM coordinates matrix
-utmcoor<-SpatialPoints(cbind(imageutm$center_lon,imageutm$center_lat), proj4string=CRS("+proj=utm +zone=10"))
+utmcoor_LL<-SpatialPoints(cbind(LLutm$lower_left_lat,LLutm$lower_left_lon),
+                       proj4string=CRS("+proj=utm +zone=10"))
+
+utmcoor_UR<-SpatialPoints(cbind(URutm$upper_right_lat, URutm$upper_right_lon),
+                          proj4string=CRS("+proj=utm +zone=10"))
+#utmdata$X and utmdata$Y are corresponding to UTM Easting and Northing,
 #utmdata$X and utmdata$Y are corresponding to UTM Easting and Northing, respectively.
 #zone= UTM zone
 
 #now convert to lonlat
-centerlonlatcoorSP<-spTransform(utmcoor,CRS("+proj=longlat"))
-
+UTMcoor_LLSP<-spTransform(utmcoor_LL,CRS("+proj=longlat"))
+#now convert to lonlat
+UTMcoor_URSP<-spTransform(utmcoor_UR,CRS("+proj=longlat"))
 #converto to a data.frame
 
-centerlonlatcoor <- data.frame(longitude = coordinates(centerlonlatcoorSP)[,1], latitude = coordinates(centerlonlatcoorSP)[,2])
+UTMcoor_LLSP_df <- data.frame(LL_longitude = coordinates(UTMcoor_LLSP)[,1], LL_latitude = coordinates(UTMcoor_LLSP)[,2])
+
+
+UTMcoor_URSP_df <- data.frame(UR_longitude = coordinates(UTMcoor_URSP)[,1], UR_latitude = coordinates(UTMcoor_URSP)[,2])
 
 
 
@@ -107,11 +138,11 @@ scene_with_FF_UTM <- cbind(scene_with_FF_UTM, sceneslice_coords_clean)
 
 #add a col combinig row/col, for labeling plots later
 
-scene_with_FF_UTM <- unite(scene_with_FF_UTM, FFrow_col, FFrow, FFcol, sep = ",", remove = FALSE)
+scene_with_FF_UTM <- unite(scene_with_FF_UTM, FFrow_col, true_row, true_col, sep = ",", remove = FALSE)
 
 #add lon/lats
 
-scene_with_FF_UTM <- cbind(scene_with_FF_UTM, centerlonlatcoor)
+scene_with_FF_UTM <- cbind(scene_with_FF_UTM, UTMcoor_URSP_df, UTMcoor_LLSP_df)
 
 
 

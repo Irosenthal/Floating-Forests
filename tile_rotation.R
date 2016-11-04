@@ -42,7 +42,7 @@ scene_with_FF_UTM_master <- read_csv("scene_with_FF_UTM.csv")
 #have to use the adjusted up row/cols because the matrix doesn't start at 0. 
 #IE in the actual metadata image AKP00016e6 shows up as 14,12, but in this analysis it is 15,13
 
-scene_with_FF_UTM <- scene_with_FF_UTM_master %>%
+scene_with_FF_UTM <- scenelookup %>%
   rowwise() %>%
   mutate(tile_ID = true_tiles[FFrow, FFcol])
 
@@ -62,7 +62,7 @@ scene_with_FF_UTM <- scene_with_FF_UTM %>%
 
 write_csv(scene_with_FF_UTM, "scene_with_FF_UTM_correct_row_cols.csv" )
 
-
+scene_with_FF_UTM <- read_csv("./scene_with_FF_UTM_correct_row_cols.csv")
 
 ######
 corrected_tiles <- read_csv("./scene_with_FF_UTM_correct_row_cols.csv")
@@ -72,6 +72,16 @@ imagelookup <- filter(corrected_tiles, as.character(zooniverse_id) == "AKP00016e
 ### some cleanup
 
 #convert all UTM to lat long
+
+#now take scene_with_FF_UTM, made by the cornercalc function and do this stuff.
+
+#going the wrong way here
+corrected_tiles_tidy_PH <- corrected_tiles_tidy
+
+corrected_tiles <- corrected_tiles_tidy_PH
+
+corrected_tiles <- scene_with_FF_UTM
+
 
 #get UTM coordinates
 upper_left_x <- corrected_tiles$upper_left_x_utm
@@ -145,18 +155,33 @@ corners_long_lat <- data.frame(UR_lon_lat, UL_lon_lat, LR_lon_lat, LL_lon_lat)
 
 #set up destination data frame
 
+
 corrected_tiles_tidy <- corrected_tiles %>%
-  select(sceneID, zooniverse_id, true_row, true_col, UTMzone,metadata.file)
+  dplyr::select(sceneID, zooniverse_id, true_row, true_col, sceneID)
+
+corrected_tiles_tidy <- corrected_tiles %>%
+  dplyr::select(29,31,56,12)
+
+#thats fucked up, just do it in excel
+
+corrected_tiles_tidy<-sapply(corrected_tiles_tidy,unlist)
+corrected_tiles_tidy <- as.data.frame(corrected_tiles_tidy)
+
+
+write_csv(scene_with_FF_UTM, path = "scene_with_FF_UTM.csv")
+
+write_csv(corrected_tiles_tidy, "tidy_scene_with_FF_UTM_correct_row_cols.csv" )
+
+corrected_tiles_tidy <- read_csv("tidy_scene_with_FF_UTM_correct_row_cols.csv")
+
 
 #Jam those new coords on there
 
 corrected_tiles_tidy <- corrected_tiles_tidy %>%
-  dplyr::mutate(upper_right_x = corners_long_lat$longitude, upper_right_y = corners_long_lat$latitude,
-         upper_left_x = corners_long_lat$longitude.1, upper_right_y = corners_long_lat$latitude.1,
-         lower_right_x = corners_long_lat$longitude.2, lower_right_y = corners_long_lat$latitude.2,
-         lower_left_x = corners_long_lat$longitude.3, lower_left_y = corners_long_lat$latitude.3)
+  dplyr::mutate(lower_left_x = corners_long_lat$longitude.3, lower_left_y = corners_long_lat$latitude.3,
+                upper_right_x = corners_long_lat$longitude, upper_right_y = corners_long_lat$latitude)
 
-write_csv(corrected_tiles_tidy, "tidy_scene_with_FF_UTM_correct_row_cols.csv" )
+write_csv(corrected_tiles_tidy, "tidy_scene_with_FF_UTM_correct_row_cols_don't_fuck_with_this_one.csv" )
 
 #########################################################
-
+corrected_tiles_tidy <- read_csv("tidy_scene_with_FF_UTM_correct_row_cols.csv")

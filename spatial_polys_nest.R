@@ -4,12 +4,7 @@ library(R.matlab)
 
 #First, create a dataframe to nest spatial poly data frames in
 #dont need to do this each time
-#scene_data <- read_csv("tidy_scene_with_FF_UTM_correct_row_cols_don't_fuck_with_this_one.csv")
-#use this one while testing new corners
-
-scene_data <- scene_with_FF_UTM
-
-
+scene_data <- read_csv("tidy_scene_with_FF_UTM_correct_row_cols_don't_touch.csv")
 sp_data <- corrected_tiles_tidy %>%
   dplyr::select(zooniverse_id, upper_right_x, upper_right_y, lower_left_x, lower_left_y)
 
@@ -38,7 +33,7 @@ out <- split(classifications_clean , f = classifications_clean$subject_zoonivers
 
 sp_classifications_list <- lapply(out, getSpatialPolysDataFrameForOneImage)
 
-out[[6]]
+
 
 
 #load the SBCC data and reprocess into a SpatialPoints object
@@ -103,7 +98,7 @@ plot(sp_classifications_df[[x,2]], add=T)
 
 tileBrick <- rasterizeFFImage(sp_classifications_df[[x,2]][1,])
 plotRGB(tileBrick)
-plot(coasts, xlim=lims[1:2], ylim=lims[3:4], lwd=4, add=T)
+#plot(coasts, xlim=lims[1:2], ylim=lims[3:4], lwd=4, add=T)
 plot(caKelp.spoints, xlim=longBounds, ylim=latBounds, pch=20, cex=0.5, 
      add=T, col=rgb(1,0,0,alpha=0.1))
 
@@ -114,7 +109,7 @@ plot(sp_classifications_df[[x,2]], add=T)
 ###################################
 #rasterise!
 
-r <- raster(crs=sp_classifications_df[[x,2]]@proj4string, ext=extent(sp_classifications_df[[x,2]]), ncols = 400, nrows=364)
+r <- raster(crs=sp_classifications_df[[6,2]]@proj4string, ext=extent(sp_classifications_df[[x,2]]), ncols = 400, nrows=364)
 rastLayer <- rasterize(SpatialPolygons(sp_classifications_df[[x,2]]@polygons), r, fun="count")
 
 
@@ -174,6 +169,11 @@ kelpPixels <- data.frame(users=1:15,
                          goodKelpPixels = getKelpPixelsFromRasterV(combined.raster, 1:15))
 kelpPixels$kelpArea <- kelpPixels$kelpPixels*0.03*0.03
 
+kelpPixels <- data.frame(users=1:15, 
+                         kelpPixels = getKelpPixelsFromRasterV(rastLayer, 1:15))
+kelpPixels$kelpArea <- kelpPixels$kelpPixels*0.03*0.03
+
+
 plot(goodKelpPixels ~ kelpPixels, data=kelpPixels, type="n")
 text(kelpPixels$kelpPixels, kelpPixels$goodKelpPixels, labels=1:15)
 plot(goodKelpPixels ~ users, data=kelpPixels)
@@ -188,15 +188,15 @@ qplot(users, kelpPixels, data=kelpPixels, geom=c("point"), size=I(10)) +
   xlab("\nMinimum # of Users Selecting a Pixel") + ylab("Total Pixels of Kelp\n") +
   geom_abline(intercept=getKelpPixelsFromRaster(caKelp.raster), lwd=2, lty=2, col="red") +
   theme_bw(base_size=24) +
-  ylim(c(0,15000))
+  ylim(c(0,4000))
 
 
 
 qplot(users, kelpArea, data=kelpPixels, geom=c("point"), size=I(10)) +
-  xlab("\nMinimum # of Users Selecting a 30 x 30m Pixel") + ylab("Total Square Km. of Kelp\n") +
-  geom_abline(intercept=0.03*0.03*getKelpPixelsFromRaster(caKelp.raster), slope=0, lwd=2, lty=2, col="red") +
-  theme_bw(base_size=24) +
-  ylim(c(0,10))
+  xlab("# of Users Selecting a 30 x 30m Pixel") + ylab("Total Square Km. of Kelp\n") +
+  geom_abline(intercept=0.03*0.03*getKelpPixelsFromRaster(caKelp.raster), slope=0, lwd=2, lty=2, col="red") +   theme_bw(base_size=24) +
+  scale_y_continuous(breaks=c(0,2,4,6,8,12)) +
+   theme(text = element_text(size=30))
 
 
 #Maybe a binomial model

@@ -8,9 +8,9 @@ LongLatToUTM<-function(x,y,zone){
   xy <- data.frame(ID = 1:length(x), X = x, Y = y)
   coordinates(xy) <- c("X", "Y")
   proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")  
-  res <- spTransform(xy, CRS(paste("+proj=utm +zone=",zone," ellps=WGS84",sep='')))
+  res <- spTransform(xy, CRS(paste("+proj=utm +zone=",zone," ellps=WGS84, +datum=WGS84 +units=m +no_defs",sep='')))
   return(as.data.frame(res))
-}
+}#
 
 
 

@@ -158,7 +158,7 @@ scene_with_FF_UTM <- cbind(scene_with_FF_UTM, lonlatcoor)
 
 
 library(ggmap)
-install.packages("ggmap")
+#install.packages("ggmap")
 
 #using this as a landmark, revisit once I have actual
 #source of scene metadata

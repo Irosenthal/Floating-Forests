@@ -25,7 +25,7 @@ sizex <- n_distinct(lonlatpix$x)
 
 
 #generate pixel numbers for corners of of each ff image
-# IT FINALLY WORKS
+
 
 height <- seq(1, sizey, by = 363)
 width <- seq(1, sizex, by = 399)

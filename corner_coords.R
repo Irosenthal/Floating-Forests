@@ -73,7 +73,14 @@ latgridindex <- rbind(latgridindex,latbind)
 
 #enter row and col of desired image   (row 8 col 15 for test image) 
 row <- 8
-col <- 16
+col <- 15
+
+
+
+
+lat_test <- c(latgridindex[row, 1],  latgridindex[row +1, 1])
+
+lon_test <- c(longridindex[col +1, 1], longridindex[col, 1])
 
 
 #indexing reminder: UTM coords are in first column of dataframe
@@ -117,12 +124,16 @@ imageutmlist <- data.frame(lons, lats)
 asnumbersx <- as.numeric(imageutmlist[[1]])
 asnumbersy <- as.numeric(imageutmlist[[2]])
 
-imagesutm <- data.frame(asnumbersx, asnumbersy)
+#imagesutm <- data.frame(asnumbersx, asnumbersy)
+
+imagesutm <- data.frame(lon_test, lat_test)
+
+
 
 library(rgdal)
 
 # prepare UTM coordinates matrix
-utmcoor<-SpatialPoints(cbind(imagesutm$asnumbersx,imagesutm$asnumbersy), proj4string=CRS("+proj=utm +zone=10"))
+utmcoor<-SpatialPoints(cbind(imagesutm$lon_test,imagesutm$lat_test), proj4string=CRS("+proj=utm +zone=10"))
 
 #utmdata$X and utmdata$Y are corresponding to UTM Easting and Northing, respectively.
 #zone= UTM zone

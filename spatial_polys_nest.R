@@ -4,7 +4,8 @@ library(R.matlab)
 
 #First, create a dataframe to nest spatial poly data frames in
 #dont need to do this each time
-scene_data <- read_csv("tidy_scene_with_FF_UTM_correct_row_cols_don't_touch.csv")
+scene_data <- read_csv("scene_with_FF_UTM_fix.csv")
+corrected_tiles_tidy <- read_csv('corrected_tiles_tidy.csv')
 sp_data <- corrected_tiles_tidy %>%
   dplyr::select(zooniverse_id, upper_right_x, upper_right_y, lower_left_x, lower_left_y)
 
@@ -16,11 +17,16 @@ rm_na <- function(data, desiredCols) {
   return(data[completeVec, ])
 }
 
-classifications <- read_csv("./classifications_correct_cords_1_scene.csv")
+classifications <- read_csv("./classifications_correct_cords_1_scene_fix.csv")
 
 classifications_clean <- rm_na(classifications, "relPath")
 classifications_clean <- rm_na(classifications, "startingPoint_x")
 classifications_clean <- rm_na(classifications, "startingPoint_y")
+classifications_clean <- rename(classifications_clean, created_at = created_at.x)
+classifications_clean <- rename(classifications_clean, upper_right_x = UR_longitude)
+classifications_clean <- rename(classifications_clean, upper_right_y = UR_latitude)
+classifications_clean <- rename(classifications_clean, lower_left_x = LL_longitude)
+classifications_clean <- rename(classifications_clean, lower_left_y = LL_latitude)
 
 
 #need to group each image into it's own data frame based on image id
@@ -73,6 +79,7 @@ caKelp.spoints_crop <- crop(caKelp.spoints, extent(sp_classifications_df[[x,2]])
 #caKelp.spoints <- spTransform(caKelp.spoints, CRS("+init=epsg:3857"))
 
 #get the bounds for plotting from the polygons data frame
+
 longBounds <- bbox(sp_classifications_df[[x,2]])[1,]
 latBounds <- bbox(sp_classifications_df[[x,2]])[2,]
 
@@ -97,8 +104,15 @@ plot(coasts, xlim=lims[1:2], ylim=lims[3:4], lwd=4)
 plot(sp_classifications_df[[x,2]], add=T)
 
 tileBrick <- rasterizeFFImage(sp_classifications_df[[x,2]][1,])
+
+
+#reproject to longlat in order to add shapefile of coastline
+sr <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+tileBrick <- projectRaster(tileBrick, crs = sr)
+
 plotRGB(tileBrick)
-#plot(coasts, xlim=lims[1:2], ylim=lims[3:4], lwd=4, add=T)
+
+plot(coasts, xlim=lims[1:2], ylim=lims[3:4], lwd=4, add=T)
 plot(caKelp.spoints, xlim=longBounds, ylim=latBounds, pch=20, cex=0.5, 
      add=T, col=rgb(1,0,0,alpha=0.1))
 

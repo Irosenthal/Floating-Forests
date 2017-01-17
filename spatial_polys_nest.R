@@ -1,10 +1,13 @@
 source("./FFmethods_fix.R")
 library(R.matlab)
+library(rgdal)
 
 
 #First, create a dataframe to nest spatial poly data frames in
 #dont need to do this each time
 scene_data <- read_csv("scene_with_FF_UTM_fix.csv")
+#so it plays nice with FFmethods_fix, streamline this
+scene_with_FF_UTM <- scene_data
 corrected_tiles_tidy <- read_csv('corrected_tiles_tidy.csv')
 sp_data <- corrected_tiles_tidy %>%
   dplyr::select(zooniverse_id, upper_right_x, upper_right_y, lower_left_x, lower_left_y)
@@ -23,10 +26,10 @@ classifications_clean <- rm_na(classifications, "relPath")
 classifications_clean <- rm_na(classifications, "startingPoint_x")
 classifications_clean <- rm_na(classifications, "startingPoint_y")
 classifications_clean <- rename(classifications_clean, created_at = created_at.x)
-classifications_clean <- rename(classifications_clean, upper_right_x = UR_longitude)
-classifications_clean <- rename(classifications_clean, upper_right_y = UR_latitude)
-classifications_clean <- rename(classifications_clean, lower_left_x = LL_longitude)
-classifications_clean <- rename(classifications_clean, lower_left_y = LL_latitude)
+classifications_clean <- rename(classifications_clean, upper_right_x = upper_right_x_utm)
+classifications_clean <- rename(classifications_clean, upper_right_y = upper_right_y_utm)
+classifications_clean <- rename(classifications_clean, lower_left_x = lower_left_x_utm)
+classifications_clean <- rename(classifications_clean, lower_left_y = lower_left_y_utm)
 
 
 #need to group each image into it's own data frame based on image id
@@ -39,7 +42,10 @@ out <- split(classifications_clean , f = classifications_clean$subject_zoonivers
 
 sp_classifications_list <- lapply(out, getSpatialPolysDataFrameForOneImage)
 
+#sp_classifications_list <- lapply(sp_classifications_list, spTransform(CRS("+proj=longlat +datum=WGS84")))
 
+
+spTransform(sp_classifications_df[[x,2]], CRS("+proj=longlat +datum=WGS84"))
 
 
 #load the SBCC data and reprocess into a SpatialPoints object
@@ -56,7 +62,7 @@ sp_classifications_df$SPDF <- sp_classifications_list
 #the proj4string is the same for all of them, so I only need to do this once - is there a better way?
 
 caKelp.spoints <- SpatialPoints(caKelp[,2:1], 
-                                proj4string=CRS(proj4string(sp_classifications_df[[6,2]])))
+                                proj4string=CRS(sr))
 
 #Now convert to a list and add it into the dataframe - might not even need it in there but there we go
 sp_classifications_df$caKelp.spoints <- rep(list(caKelp.spoints), 12)
@@ -71,6 +77,7 @@ sp_classifications_df$caKelp.spoints <- crop(caKelp.spoints, extent(sp_classific
 #one at a time for now
 #replace the row number in sp_classifications_df[[i,2]] for each image
 x <- 6
+
 
 sp_classifications_df[[x,2]]
 
@@ -105,7 +112,6 @@ plot(sp_classifications_df[[x,2]], add=T)
 
 tileBrick <- rasterizeFFImage(sp_classifications_df[[x,2]][1,])
 
-
 #reproject to longlat in order to add shapefile of coastline
 sr <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 tileBrick <- projectRaster(tileBrick, crs = sr)
@@ -117,6 +123,9 @@ plot(caKelp.spoints, xlim=longBounds, ylim=latBounds, pch=20, cex=0.5,
      add=T, col=rgb(1,0,0,alpha=0.1))
 
 plot(sp_classifications_df[[x,2]], add=T)
+plot(spTransform(sp_classifications_df[[x,2]], CRS("+proj=longlat +datum=WGS84")), add=T)
+
+proj_test <- spTransform(sp_classifications_df[[x,2]], CRS(sr))
 
 
 

@@ -1,7 +1,10 @@
+source("./FFmethods_fix.R")
 library(rgdal)
 library(dplyr)
 library(tidyr)
 library(sp)
+library(R.matlab)
+
 
 
 #first, convert lon/lat corners from metadata to UTM
@@ -131,63 +134,36 @@ cornercalc <- function(arow){
                                        center_x_utm, center_y_utm)
 }
 ######################
-
 #set up a dataframe to populate
 scene_with_FF_UTM <- scenelookup
 
-
-
-##apply results of cornercalc to the rest of the data
+##apply cornercalc to data
 rows <- nrow(scenelookup)
 sceneslice_coords <- sapply(1:nrow(scenelookup), cornercalc)
 
 #now transpose
-
 sceneslice_coords_clean <- t(sceneslice_coords)
 
 #bind back to scene table
-
 scene_with_FF_UTM <- cbind(scene_with_FF_UTM, sceneslice_coords_clean)
 
-
-###remove NAs
-rm_na <- function(data, desiredCols) {
-  completeVec <- complete.cases(data[, desiredCols])
-  return(data[completeVec, ])
-}
-
-
-scene_with_FF_UTM_clean <- rm_na(scene_with_FF_UTM, "lower_left_y_utm")
-
-
 #structure data for conversion from utm to lon lat
-
+#This might not be necessary
 center_lon <- scene_with_FF_UTM$center_x_utm %>%
   unlist()
 center_lat <- scene_with_FF_UTM$center_y_utm %>%
   unlist()
-
-
 lower_left_lat <- scene_with_FF_UTM$lower_left_x_utm %>%
   unlist()
 lower_left_lon <- scene_with_FF_UTM$lower_left_y_utm %>%
   unlist()
-
-
-
-
 upper_right_lat <- scene_with_FF_UTM$upper_right_x_utm %>%
   unlist()
 upper_right_lon<- scene_with_FF_UTM$upper_right_y_utm %>% 
   unlist()
 
-
-
 URutm <- data.frame(upper_right_lat = upper_right_lat, upper_right_lon =upper_right_lon)
-
 LLutm <- data.frame(lower_left_lat = lower_left_lat, lower_left_lon =lower_left_lon)
-
-
 
 # prepare UTM coordinates matrix
 utmcoor_LL<-SpatialPoints(cbind(LLutm$lower_left_lat,LLutm$lower_left_lon),
@@ -199,31 +175,52 @@ utmcoor_UR<-SpatialPoints(cbind(URutm$upper_right_lat, URutm$upper_right_lon),
 #utmdata$X and utmdata$Y are corresponding to UTM Easting and Northing, respectively.
 #zone= UTM zone
 
-#now convert to lonlat
+#now convert to lonlat. again, maybe not necessary
 UTMcoor_LLSP<-spTransform(utmcoor_LL,CRS("+proj=longlat"))
 #now convert to lonlat
 UTMcoor_URSP<-spTransform(utmcoor_UR,CRS("+proj=longlat"))
-#converto to a data.frame
-
+#convert to to a data.frame
 UTMcoor_LLSP_df <- data.frame(LL_longitude = coordinates(UTMcoor_LLSP)[,1], LL_latitude = coordinates(UTMcoor_LLSP)[,2])
-
-
 UTMcoor_URSP_df <- data.frame(UR_longitude = coordinates(UTMcoor_URSP)[,1], UR_latitude = coordinates(UTMcoor_URSP)[,2])
 
-
 #add lon/lats
-
 scene_with_FF_UTM <- cbind(scene_with_FF_UTM, UTMcoor_URSP_df, UTMcoor_LLSP_df)
 
-
-
-
+#cleanup and save
 scene_with_FF_UTM<-sapply(scene_with_FF_UTM,unlist)
 scene_with_FF_UTM <- as.data.frame(scene_with_FF_UTM)
-
 scene_with_FF_UTM <- rm_na(scene_with_FF_UTM, "lower_left_y_utm")
-
-
 write_csv(scene_with_FF_UTM, path = "scene_with_FF_UTM_fix.csv")
 
+
+###############
+#Fix classification table
+
+#bring in data if not still loaded
 scene_with_FF_UTM <- read_csv("scene_with_FF_UTM_fix.csv")
+classifications <- read_csv("./2016-05-29_kelp_classifications.csv")
+corrected_tiles_tidy <- scene_with_FF_UTM
+
+#get rid of old, bad coords
+classifications$upper_right_x <- NULL 
+classifications $upper_right_y <- NULL
+classifications$lower_left_x <- NULL
+classifications$lower_left_y <- NULL
+
+#join good coords back on
+classifications <- left_join(classifications, corrected_tiles_tidy, by = c("subject_zooniverse_id"="zooniverse_id"))
+
+#now get rid of everything that isn't part of the desired scene 
+rm_na <- function(data, desiredCols) {
+  completeVec <- complete.cases(data[, desiredCols])
+  return(data[completeVec, ])
+}
+
+classifications <- rm_na(classifications, "upper_right_x_utm")
+
+#save
+write_csv(classifications, "./classifications_correct_cords_1_scene_fix.csv")
+###############################################################################
+#for plotting/validation, refer to spatial_polys_nest.R, in this repo
+
+

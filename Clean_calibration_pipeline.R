@@ -9,11 +9,11 @@ library(R.matlab)
 
 #first, convert lon/lat corners from metadata to UTM
 
-new_LongLatToUTM<-function(x,y,zone){
+newLongLatToUTM<-function(x,y,zone){
   xy <- data.frame(ID = 1:length(x), X = x, Y = y)
   coordinates(xy) <- c("X", "Y")
   proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")  
-  res <- spTransform(xy, CRS(paste("+proj=utm +zone=",zone," ellps=WGS84, +datum=WGS84 +units=m +no_defs",sep='')))
+  res <- spTransform(xy, CRS(paste("+proj=utm +zone=",zone,",+south, ellps=WGS84, +datum=WGS84 +units=m +no_defs",sep='')))
   return(as.data.frame(res))
 }
 
@@ -29,7 +29,40 @@ x <- c(-123.87555,
        -123.85451,
        -121.26163)
 
-newsceneUTM <- new_LongLatToUTM(x,y,10)
+#tassie test, scene LT50900881987245ASA00
+#from metadata csv, wrong
+y <- c(-39.3757,
+       -39.6838,
+       -40.9468,
+       -41.2619)
+
+x<- c(147.287,
+      149.402,
+      146.762,
+      148.924)
+#from L1
+y <- c(-39.32696,#UR
+       -39.35302,#UL
+       -41.27919,#LR
+       -41.30710)#LL
+
+x<- c(149.48268,#UR
+      146.68431,#UL
+      149.55525,#LR
+      146.67507)#LL
+
+
+sceneUTM <- newLongLatToUTM(x,y,55)
+
+
+scenedf <- data.frame(x,y)
+
+scenesp<- SpatialPoints(scenedf, proj4string=CRS("+proj=longlat +datum=WGS84"))
+
+scenesp_utm <- spTransform(scenesp, ("+proj=utm +zone=55 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs"))
+
+
+sceneUTM <- as.data.frame(scenesp_utm)
 
 ######################
 #corner corrections for FF images
@@ -43,7 +76,7 @@ image_chunk_width <- image_width / no_rows #364
 image_chunk_height <- image_height / no_colls #399
 
 #make a grid of latlongs by 30 meters using corners of scene as start/end points
-lonlatpix <-expand.grid(x = seq(min(sceneUTM$X), max(sceneUTM$X), by = 30), y = seq(max(sceneUTM$Y), min(sceneUTM$Y), by = -30))
+lonlatpix <-expand.grid(x = seq(min(sceneUTM$x), max(sceneUTM$x), by = 30), y = seq(max(sceneUTM$y), min(sceneUTM$y), by = -30))
 
 
 
@@ -106,7 +139,7 @@ latbind <- cbind(lastlat, Row)
 data <- read_csv("scene_with_FF_UTM_correct_row_cols.csv")
 
 #just want one scene
-scenelookup <- filter(data, sceneID == "LE70440351999204EDC01")
+scenelookup <- filter(data, sceneID == "LT50900881987245ASA00")
 ##################
 #function to recalculate corners based on NONRESIZED FF images
 cornercalc <- function(arow){
@@ -198,18 +231,18 @@ write_csv(scene_with_FF_UTM, path = "scene_with_FF_UTM_fix.csv")
 
 #bring in data if not still loaded
 scene_with_FF_UTM <- read_csv("scene_with_FF_UTM_fix.csv")
-classifications <- read_csv("./2016-05-29_kelp_classifications.csv")
+classifications_raw <- read_csv("./2016-05-29_kelp_classifications.csv")
 corrected_tiles_tidy <- scene_with_FF_UTM
+classifications <- classifications_raw
 
 #get rid of old, bad coords
 classifications$upper_right_x <- NULL 
-classifications $upper_right_y <- NULL
+classifications$upper_right_y <- NULL
 classifications$lower_left_x <- NULL
 classifications$lower_left_y <- NULL
 
 #join good coords back on
 classifications <- left_join(classifications, corrected_tiles_tidy, by = c("subject_zooniverse_id"="zooniverse_id"))
-
 #now get rid of everything that isn't part of the desired scene 
 rm_na <- function(data, desiredCols) {
   completeVec <- complete.cases(data[, desiredCols])

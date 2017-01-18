@@ -8,9 +8,10 @@ library(rgdal)
 scene_data <- read_csv("scene_with_FF_UTM_fix.csv")
 #so it plays nice with FFmethods_fix, streamline this
 scene_with_FF_UTM <- scene_data
-corrected_tiles_tidy <- read_csv('corrected_tiles_tidy.csv')
+corrected_tiles <- read_csv("./scene_with_FF_UTM_correct_row_cols.csv")
+
 sp_data <- corrected_tiles_tidy %>%
-  dplyr::select(zooniverse_id, upper_right_x, upper_right_y, lower_left_x, lower_left_y)
+  dplyr::select(zooniverse_id, upper_right_x_utm, upper_right_y_utm, lower_left_x_utm, lower_left_y_utm)
 
 
 
@@ -45,7 +46,6 @@ sp_classifications_list <- lapply(out, getSpatialPolysDataFrameForOneImage)
 #sp_classifications_list <- lapply(sp_classifications_list, spTransform(CRS("+proj=longlat +datum=WGS84")))
 
 
-spTransform(sp_classifications_df[[x,2]], CRS("+proj=longlat +datum=WGS84"))
 
 
 #load the SBCC data and reprocess into a SpatialPoints object
@@ -55,7 +55,7 @@ caKelp <- caKelp$kelp[which(caKelp$kelp[,3]>0),]
 
 #this is slightly different - need the proj4string for an element of my list
 #first put the cakelp spatial points into a dataframe
-sp_classifications_df <- data.frame(matrix(ncol = 1, nrow = 12))
+sp_classifications_df <- data.frame(matrix(ncol = 1, nrow = 17))
 
 sp_classifications_df$SPDF <- sp_classifications_list
 
@@ -76,7 +76,7 @@ sp_classifications_df$caKelp.spoints <- crop(caKelp.spoints, extent(sp_classific
 ################Here's where I do each image.
 #one at a time for now
 #replace the row number in sp_classifications_df[[i,2]] for each image
-x <- 6
+x <- 7
 
 
 sp_classifications_df[[x,2]]

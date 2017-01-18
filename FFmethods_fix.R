@@ -18,7 +18,7 @@ getImageInfo <- function(imageID, subjURL = "https://api.zooniverse.org/projects
 #FIX FOR SKEWED IMAGES: import in utm and then feed it the correct coordinates.
 #NOTE: scene_with_FF_UTM is likely to change as project evolves/becomes automated, just make sure to
 #feed it the correct corner coordinates via meta_info
-rasterizeFFImage <- function(arow, proj="+proj=utm +zone=10 +datum=WGS84", correct_meta = scene_with_FF_UTM){
+rasterizeFFImage <- function(arow, proj="+proj=utm +zone=55 +south +datum=WGS84", correct_meta = scene_with_FF_UTM){
   imageInfo <- getImageInfo(arow$subject_zooniverse_id)
   meta_info <- dplyr::filter(scene_with_FF_UTM, zooniverse_id == arow$subject_zooniverse_id)
   loc <- gsub("http://", "https://static.zooniverse.org/", imageInfo$location)
@@ -106,13 +106,14 @@ getPolys <- function(aframe, idForPolys=aframe$classification_id[1]){
 }
 
 #takes a dataframe and returns a SpatialPolygons object
-getSpatialPolysForOneImage <- function(aframe, proj="+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"){
+getSpatialPolysForOneImage <- function(aframe, proj= "+proj=utm +zone=55 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs") {
+  #old: proj="+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
   polys <- plyr::dlply(aframe, "classification_id", getPolys)
   SpatialPolygons(polys, proj4string=CRS(proj))
 }
 
 #takes a dataframe and returns a SpatialPolygons object
-getSpatialPolysDataFrameForOneImage <- function(aframe, proj="+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"){
+getSpatialPolysDataFrameForOneImage <- function(aframe, proj= "+proj=utm +zone=55 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs"){
   spatialPolys <- getSpatialPolysForOneImage(aframe, proj)
  #old "+proj=merc +datum=WGS84"
   newFrame <- aframe %>%

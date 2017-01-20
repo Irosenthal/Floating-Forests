@@ -37,7 +37,8 @@ ff_tiles <- rotate(rotate(rotate(matr)))
 #can't do image ids because I don't have all of them - couldnt populate the entire matrix and there's no logical way to fill gaps with NAs or something
 #to look up the row/col of a particular value
 #trying with new dplyr stuff
-scene_with_FF_UTM_master <- read_csv("scene_with_FF_UTM.csv")
+#this is outdated, use scenelookup from meta_compare.R
+scene_with_FF_UTM_master <- read_csv("scene_with_FF_UTM_FIX.csv")
 
 #have to use the adjusted up row/cols because the matrix doesn't start at 0. 
 #IE in the actual metadata image AKP00016e6 shows up as 14,12, but in this analysis it is 15,13
@@ -162,7 +163,7 @@ corrected_tiles_tidy <- corrected_tiles %>%
 corrected_tiles_tidy <- corrected_tiles %>%
   dplyr::select(29,31,56,12)
 
-#thats fucked up, just do it in excel
+#thats messed up, just do it in excel
 
 corrected_tiles_tidy<-sapply(corrected_tiles_tidy,unlist)
 corrected_tiles_tidy <- as.data.frame(corrected_tiles_tidy)
@@ -181,7 +182,7 @@ corrected_tiles_tidy <- corrected_tiles_tidy %>%
   dplyr::mutate(lower_left_x = corners_long_lat$longitude.3, lower_left_y = corners_long_lat$latitude.3,
                 upper_right_x = corners_long_lat$longitude, upper_right_y = corners_long_lat$latitude)
 
-write_csv(corrected_tiles_tidy, "tidy_scene_with_FF_UTM_correct_row_cols_don't_fuck_with_this_one.csv" )
+write_csv(corrected_tiles_tidy, "tidy_scene_with_FF_UTM_correct_row_cols_don't_touch.csv" )
 
 #########################################################
 corrected_tiles_tidy <- read_csv("tidy_scene_with_FF_UTM_correct_row_cols.csv")

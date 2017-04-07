@@ -8,8 +8,11 @@
 #ultimate goal is for each scene, create the corner cordinate grid and attach correct cooridnates to each subject
 #the code used within the function works on a one scene at a time basis, issues are due to the scale-up.
 ################
+library(dplyr)
+library(tidyr)
+test_subjects <- read.csv("./test_subjects.csv")
 
-
+#arow comes from test_subjects.csv
 scene_grid <- function(arow){ #also thought about doing this by scene
   LLX <- unlist(test_subjects[arow,'CORNER_LL_PROJECTION_X_PRODUCT'])
   LRX <- unlist(test_subjects[arow,'CORNER_LR_PROJECTION_X_PRODUCT'])
@@ -18,7 +21,7 @@ scene_grid <- function(arow){ #also thought about doing this by scene
   
   
   lonlatpix <-expand.grid(x = seq(as.numeric(LLX), as.numeric(LRX), by = 30),  
-                          y = seq(as.numeric(LLY), as.numeric(ULY), by = -30))
+                          y = seq(as.numeric(ULY), as.numeric(LLY), by = -30))
   #this assigns each to a unique  pixel to each set of utm coords within the scene
   lonlatpixIndex <- mutate(lonlatpix, PID = 1:nrow(lonlatpix))
   sizey <- n_distinct(lonlatpix$y)
@@ -63,17 +66,20 @@ scene_grid <- function(arow){ #also thought about doing this by scene
   
   #indexing reminder: UTM coords are in first column of dataframe
   #pull out important points 
-  upper_left_x_utm <- longridindex[col, 1]
-  upper_left_y_utm <- latgridindex[row, 1]
-  lower_left_x_utm <- longridindex[col, 1]
-  lower_left_y_utm <- latgridindex[row + 1, 1]
-  upper_right_x_utm <- longridindex[col + 1, 1]
-  upper_right_y_utm <- latgridindex[row, 1]
-  lower_right_x_utm <-longridindex[col + 1, 1]
-  lower_right_y_utm <- latgridindex[row + 1, 1]
+  upper_left_x_utm <- longridindex[Col, 1]
+  upper_left_y_utm <- latgridindex[Row, 1]
+  lower_left_x_utm <- longridindex[Col, 1]
+  lower_left_y_utm <- latgridindex[Row + 1, 1]
+  upper_right_x_utm <- longridindex[Col + 1, 1]
+  upper_right_y_utm <- latgridindex[Row, 1]
+  lower_right_x_utm <-longridindex[Col + 1, 1]
+  lower_right_y_utm <- latgridindex[Row + 1, 1]
   center_x_utm <- (upper_left_x_utm + ((upper_right_x_utm - upper_left_x_utm)/2))
   center_y_utm <- (lower_left_y_utm + ((upper_left_y_utm - lower_left_y_utm)/2))
-  row_col <- unite("row_col" = latgridindex[row,],longridindex[col,], by = "_", remove = FALSE) #this might need tweaking, but should at least run
+  
+  row_col <- paste(Row, Col, sep="_") 
+  
+  #this might need tweaking, but should at least run
   subjects_corners$scene_corners <- data.frame(upper_left_x_utm, upper_left_y_utm, 
                                             lower_left_x_utm, lower_left_y_utm, 
                                             upper_right_x_utm, upper_right_y_utm, 
@@ -83,7 +89,7 @@ scene_grid <- function(arow){ #also thought about doing this by scene
   
   #This needs to only join within one scene. better to do that with groups outside of the function, or 
   #just include scene in the join to make each set of row_cols unique?
-  test_subjects_with corners <- left_join(test_subjects, subjects_corners, by = "row_col") 
+  test_subjects_with_corners <- left_join(test_subjects, subjects_corners, by = "row_col") 
   
 }
 

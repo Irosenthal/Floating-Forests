@@ -1,0 +1,3 @@
+6/9/2017
+generation of subjects table should be all set and never need to be done again - subjects_from_MTLs.csv created in 01_mtl_parsing.R
+now need to tackle tile_lookup_df - figure out if the row_col field in subjects is already adjusted up or not
